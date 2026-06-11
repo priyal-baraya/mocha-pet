@@ -40,8 +40,8 @@ function createWindow() {
   win.setIgnoreMouseEvents(false)
 
   ipcMain.on('expand', () => {
-    win.setSize(300, 480)
-    win.setPosition(width - 320, height - 500)
+    win.setSize(300, 560)
+    win.setPosition(width - 320, height - 580)
   })
   ipcMain.on('collapse', () => {
     win.setSize(160, 180)
@@ -58,3 +58,6 @@ app.on('window-all-closed', () => {
 ipcMain.handle('load-data', () => loadData())
 ipcMain.handle('save-data', (_, data) => { saveData(data); return true })
 ipcMain.on('quit', () => app.quit())
+ipcMain.on('set-on-top', (_, flag) => {
+  BrowserWindow.getAllWindows().forEach(w => w.setAlwaysOnTop(flag))
+})

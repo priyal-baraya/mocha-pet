@@ -10,12 +10,11 @@
     <!-- Drag handle -->
     <div id="drag-bar" title="Drag to move"></div>
 
-    <!-- Close button -->
-    <button id="close-btn" onclick="window.require('electron').remote?.app.quit() || require('electron').ipcRenderer.send('quit')">×</button>
 
     <!-- Hamster SVG container -->
     <div id="pet-container">
       <div id="mood-label"></div>
+      <div id="speech-bubble"></div>
       <svg id="mocha" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
 
         <!-- Ears behind head -->
@@ -122,6 +121,19 @@
         <span id="xp-display">✨ 0 pts</span>
       </div>
 
+      <!-- Pomodoro timer -->
+      <div id="pomodoro">
+        <div id="pomo-left">
+          <div id="pomo-status">🍅 Focus</div>
+          <div id="pomo-time" title="Click to edit">25:00</div>
+          <input id="pomo-edit" type="number" min="1" max="99" value="25" />
+        </div>
+        <div id="pomo-controls">
+          <button id="pomo-toggle">▶</button>
+          <button id="pomo-reset">↺</button>
+        </div>
+      </div>
+
       <div id="task-input-row">
         <input id="task-input" type="text" placeholder="Add a task..." maxlength="40" />
         <button id="add-btn">+</button>
@@ -130,6 +142,12 @@
       <ul id="task-list"></ul>
 
       <div id="empty-state">No tasks yet — add one above!</div>
+
+      <div id="panel-footer">
+        <button id="ctx-top">📌 On top</button>
+        <button id="ctx-reset">🗑️ Reset</button>
+        <button id="ctx-close">✕ Close</button>
+      </div>
     </div>
   </div>
 

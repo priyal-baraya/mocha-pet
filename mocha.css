@@ -27,23 +27,6 @@ body {
   cursor: grab;
 }
 
-#close-btn {
-  position: absolute;
-  top: 2px;
-  right: 8px;
-  background: rgba(255,100,130,0.7);
-  border: none;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  z-index: 100;
-  transition: background 0.2s;
-}
-#close-btn:hover { background: #ff4466; }
 
 /* Pet area */
 #pet-container {
@@ -85,6 +68,49 @@ body {
 }
 #mood-label.visible { opacity: 1; }
 
+/* Speech bubble */
+#speech-bubble {
+  position: absolute;
+  top: -10px;
+  left: 155px;
+  background: rgba(255, 245, 240, 0.97);
+  border: 1px solid #d4a898;
+  border-radius: 12px;
+  padding: 7px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7a5050;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.85) translateY(4px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(160, 80, 60, 0.12);
+}
+#speech-bubble::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 12px;
+  border: 7px solid transparent;
+  border-right-color: #d4a898;
+  border-left: 0;
+}
+#speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 13px;
+  border: 6px solid transparent;
+  border-right-color: rgba(255, 245, 240, 0.97);
+  border-left: 0;
+}
+#speech-bubble.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
 /* Tear */
 #tears {
   transition: opacity 0.4s ease;
@@ -92,10 +118,11 @@ body {
 
 /* Blink */
 .eyelid {
+  transform-box: fill-box;
+  transform-origin: center top;
   transform: scaleY(0);
   animation: blink 5s ease-in-out infinite;
 }
-
 @keyframes blink {
   0%, 88%, 100% { transform: scaleY(0); }
   92%           { transform: scaleY(1); }
@@ -150,22 +177,59 @@ body {
 }
 
 /* Idle animations */
-.ear-twitch {
-  animation: ear-twitch 0.4s ease-in-out 2 !important;
+.ear-twitch-left {
+  animation: ear-twitch-l 0.35s ease-in-out 2 !important;
+  transform-origin: 55px 80px;
 }
-@keyframes ear-twitch {
-  0%, 100% { transform: translateY(0px); }
-  40%       { transform: translateY(-5px) scaleY(1.1); }
+.ear-twitch-right {
+  animation: ear-twitch-r 0.35s ease-in-out 2 !important;
+  transform-origin: 145px 80px;
+}
+@keyframes ear-twitch-l {
+  0%, 100% { transform: rotate(0deg) scaleY(1); }
+  45%       { transform: rotate(-12deg) scaleY(1.12); }
+}
+@keyframes ear-twitch-r {
+  0%, 100% { transform: rotate(0deg) scaleY(1); }
+  45%       { transform: rotate(12deg) scaleY(1.12); }
 }
 
 .head-tilt {
-  animation: head-tilt 2s ease-in-out 1 !important;
-  transform-origin: center center;
+  animation: head-tilt 2.4s cubic-bezier(0.45, 0, 0.55, 1) 1 !important;
+  transform-origin: 100px 120px;
 }
 @keyframes head-tilt {
-  0%, 100% { transform: rotate(0deg); }
-  30%       { transform: rotate(6deg); }
-  70%       { transform: rotate(-4deg); }
+  0%         { transform: rotate(0deg); }
+  25%         { transform: rotate(8deg); }
+  55%         { transform: rotate(-6deg); }
+  80%         { transform: rotate(3deg); }
+  100%        { transform: rotate(0deg); }
+}
+
+/* Double blink */
+.double-blink {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: double-blink 0.7s ease-in-out 1 !important;
+}
+@keyframes double-blink {
+  0%, 100%  { transform: scaleY(0); }
+  15%, 28%  { transform: scaleY(1); }
+  38%, 55%  { transform: scaleY(0); }
+  65%, 78%  { transform: scaleY(1); }
+  90%       { transform: scaleY(0); }
+}
+
+/* Sleepy eyes */
+.eyelid.sleepy {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: sleepy-droop 2.5s ease-in-out 1 forwards !important;
+}
+@keyframes sleepy-droop {
+  0%              { transform: scaleY(0); }
+  20%, 70%        { transform: scaleY(0.55); }
+  100%            { transform: scaleY(0); }
 }
 
 /* Petting */
@@ -209,6 +273,98 @@ body {
   margin-bottom: 4px;
   letter-spacing: 0.5px;
 }
+
+/* Panel footer */
+#panel-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #ead8d0;
+  gap: 4px;
+}
+#panel-footer button {
+  flex: 1;
+  background: none;
+  border: 1px solid #e0c8c0;
+  padding: 5px 4px;
+  font-size: 11px;
+  color: #9a6858;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+#panel-footer button:hover { background: rgba(212, 136, 122, 0.12); }
+#panel-footer #ctx-close { color: #c05040; border-color: #e0b8b0; }
+#panel-footer #ctx-close:hover { background: rgba(192, 80, 64, 0.1); }
+
+/* Pomodoro */
+#pomodoro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1px solid #ead8d0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+#pomo-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b06050;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+#pomo-time {
+  font-size: 22px;
+  font-weight: 700;
+  color: #3a2018;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+#pomodoro.break #pomo-status { color: #6a9a70; }
+#pomodoro.break #pomo-time   { color: #4a7a50; }
+#pomo-time { cursor: pointer; }
+#pomo-time:hover { opacity: 0.7; }
+#pomo-edit {
+  display: none;
+  width: 52px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #3a2018;
+  border: none;
+  border-bottom: 2px solid #d4887a;
+  background: none;
+  outline: none;
+  letter-spacing: 1px;
+}
+/* hide number spinners */
+#pomo-edit::-webkit-inner-spin-button,
+#pomo-edit::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+#pomo-controls {
+  display: flex;
+  gap: 6px;
+}
+#pomo-controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #e0c8c0;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #9a6858;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#pomo-controls button:hover  { background: rgba(212,136,122,0.12); }
+#pomo-controls button:active { transform: scale(0.9); }
+#pomo-toggle.running { color: #b06050; border-color: #d4887a; }
 
 /* Task panel */
 #task-panel {

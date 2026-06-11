@@ -230,12 +230,12 @@ const earL = document.getElementById('ear-left')
 const earR = document.getElementById('ear-right')
 
 function idleEarTwitch() {
-  earL.classList.add('ear-twitch')
-  setTimeout(() => earL.classList.remove('ear-twitch'), 900)
+  earL.classList.add('ear-twitch-left')
+  setTimeout(() => earL.classList.remove('ear-twitch-left'), 800)
   setTimeout(() => {
-    earR.classList.add('ear-twitch')
-    setTimeout(() => earR.classList.remove('ear-twitch'), 900)
-  }, 200)
+    earR.classList.add('ear-twitch-right')
+    setTimeout(() => earR.classList.remove('ear-twitch-right'), 800)
+  }, 250)
 }
 
 function idleHeadTilt() {
@@ -269,22 +269,52 @@ function idleLookAround() {
 
 function idleDoubleBlink() {
   const eyelids = document.querySelectorAll('.eyelid')
-  const blink = () => {
-    eyelids.forEach(e => e.style.transform = 'scaleY(1)')
-    setTimeout(() => eyelids.forEach(e => e.style.transform = 'scaleY(0)'), 120)
-  }
-  blink()
-  setTimeout(blink, 350)
+  eyelids.forEach(e => {
+    e.classList.remove('double-blink')
+    void e.offsetWidth
+    e.classList.add('double-blink')
+    setTimeout(() => e.classList.remove('double-blink'), 650)
+  })
+}
+
+function isNight() {
+  const h = new Date().getHours()
+  return h >= 22 || h < 6
+}
+
+function idleSleepyEyes() {
+  const eyelids = document.querySelectorAll('.eyelid')
+  eyelids.forEach(e => {
+    e.classList.remove('sleepy')
+    void e.offsetWidth // force reflow to restart animation
+    e.classList.add('sleepy')
+    setTimeout(() => e.classList.remove('sleepy'), 2600)
+  })
+}
+
+function idleYawn() {
+  const yawnPath = 'M 88 136 Q 100 158 112 136'
+  const normalPath = MOODS[mocha.className]?.mouth || MOODS.content.mouth
+  // open wide
+  mouthPath.setAttribute('d', yawnPath)
+  // hold open, then close
+  setTimeout(() => mouthPath.setAttribute('d', normalPath), 1800)
+  // sleepy eyes during yawn
+  setTimeout(() => idleSleepyEyes(), 200)
 }
 
 const IDLE_ANIMS = [idleEarTwitch, idleHeadTilt, idleLookAround, idleDoubleBlink]
+const NIGHT_ANIMS = [idleYawn, idleSleepyEyes]
 
 function scheduleIdleAnim() {
   const delay = 20000 + Math.random() * 20000 // 20–40s
   setTimeout(() => {
     const isBusy = mocha.classList.contains('celebrating') || mocha.classList.contains('petting')
     if (!isBusy) {
-      IDLE_ANIMS[Math.floor(Math.random() * IDLE_ANIMS.length)]()
+      const pool = isNight()
+        ? [...IDLE_ANIMS, ...NIGHT_ANIMS, ...NIGHT_ANIMS] // weight night anims higher at night
+        : IDLE_ANIMS
+      pool[Math.floor(Math.random() * pool.length)]()
     }
     scheduleIdleAnim()
   }, delay)
@@ -360,8 +390,137 @@ taskInput.addEventListener('keydown', e => {
   }
 })
 
-// ── Close button ───────────────────────────────────────────────────────────
-document.getElementById('close-btn').addEventListener('click', () => {
+// ── Pomodoro ───────────────────────────────────────────────────────────────
+const POMO_WORK  = 25 * 60
+const POMO_BREAK =  5 * 60
+
+let pomoSeconds  = POMO_WORK
+let pomoRunning  = false
+let pomoInterval = null
+let pomoIsBreak  = false
+
+const pomoEl     = document.getElementById('pomodoro')
+const pomoTime   = document.getElementById('pomo-time')
+const pomoStatus = document.getElementById('pomo-status')
+const pomoToggle = document.getElementById('pomo-toggle')
+
+function pomoFormat(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0')
+  const sec = String(s % 60).padStart(2, '0')
+  return `${m}:${sec}`
+}
+
+function pomoRender() {
+  pomoTime.textContent = pomoFormat(pomoSeconds)
+}
+
+function pomoTick() {
+  if (pomoSeconds > 0) {
+    pomoSeconds--
+    pomoRender()
+  } else {
+    clearInterval(pomoInterval)
+    pomoRunning = false
+    pomoToggle.textContent = '▶'
+    pomoToggle.classList.remove('running')
+
+    if (!pomoIsBreak) {
+      // work session done — celebrate
+      pomoIsBreak = true
+      pomoSeconds = POMO_BREAK
+      pomoEl.classList.add('break')
+      pomoStatus.textContent = '☕ Break'
+      spawnParticles(6)
+      mocha.classList.add('celebrating')
+      setTimeout(() => mocha.classList.remove('celebrating'), 2200)
+    } else {
+      // break done — back to work
+      pomoIsBreak = false
+      pomoSeconds = POMO_WORK
+      pomoEl.classList.remove('break')
+      pomoStatus.textContent = '🍅 Focus'
+    }
+    pomoRender()
+  }
+}
+
+// click time to edit duration (only when stopped)
+const pomoEdit = document.getElementById('pomo-edit')
+
+pomoTime.addEventListener('click', () => {
+  if (pomoRunning) return
+  pomoEdit.value = Math.floor(pomoSeconds / 60) || Math.floor(POMO_WORK / 60)
+  pomoTime.style.display = 'none'
+  pomoEdit.style.display = 'block'
+  pomoEdit.focus()
+  pomoEdit.select()
+})
+
+function commitPomoEdit() {
+  const mins = Math.max(1, Math.min(99, parseInt(pomoEdit.value) || 25))
+  pomoSeconds = mins * 60
+  pomoIsBreak = false
+  pomoEl.classList.remove('break')
+  pomoStatus.textContent = '🍅 Focus'
+  pomoEdit.style.display = 'none'
+  pomoTime.style.display = 'block'
+  pomoRender()
+}
+
+pomoEdit.addEventListener('blur', commitPomoEdit)
+pomoEdit.addEventListener('keydown', e => {
+  if (e.key === 'Enter') pomoEdit.blur()
+  if (e.key === 'Escape') {
+    pomoEdit.style.display = 'none'
+    pomoTime.style.display = 'block'
+  }
+})
+
+pomoToggle.addEventListener('click', () => {
+  if (pomoRunning) {
+    clearInterval(pomoInterval)
+    pomoRunning = false
+    pomoToggle.textContent = '▶'
+    pomoToggle.classList.remove('running')
+  } else {
+    pomoInterval = setInterval(pomoTick, 1000)
+    pomoRunning = true
+    pomoToggle.textContent = '⏸'
+    pomoToggle.classList.add('running')
+  }
+})
+
+document.getElementById('pomo-reset').addEventListener('click', () => {
+  clearInterval(pomoInterval)
+  pomoRunning  = false
+  pomoIsBreak  = false
+  pomoSeconds  = POMO_WORK
+  pomoEl.classList.remove('break')
+  pomoStatus.textContent = '🍅 Focus'
+  pomoToggle.textContent = '▶'
+  pomoToggle.classList.remove('running')
+  pomoRender()
+})
+
+// ── Panel footer ───────────────────────────────────────────────────────────
+let alwaysOnTop = true
+
+document.getElementById('ctx-top').addEventListener('click', () => {
+  alwaysOnTop = !alwaysOnTop
+  ipcRenderer.send('set-on-top', alwaysOnTop)
+  document.getElementById('ctx-top').textContent =
+    `📌 Always on top: ${alwaysOnTop ? 'on' : 'off'}`
+})
+
+document.getElementById('ctx-reset').addEventListener('click', () => {
+  data.tasks = []
+  clearTimeout(sadTimer)
+  sadTimer = null
+  save()
+  renderTasks()
+})
+
+document.getElementById('ctx-close').addEventListener('click', () => {
   ipcRenderer.send('quit')
 })
 
@@ -370,13 +529,38 @@ async function save() {
   await ipcRenderer.invoke('save-data', data)
 }
 
+// ── Startup greeting ───────────────────────────────────────────────────────
+const speechBubble = document.getElementById('speech-bubble')
+
+function showGreeting() {
+  const h = new Date().getHours()
+  const pending = data.tasks.filter(t => !t.done).length
+  const done    = data.tasks.filter(t =>  t.done).length
+
+  let msg
+  if (h >= 5 && h < 12) {
+    msg = pending > 0 ? `good morning! ${pending} task${pending > 1 ? 's' : ''} left ☀️`
+                      : 'good morning! ready to focus? ☀️'
+  } else if (h >= 12 && h < 17) {
+    msg = pending > 0 ? `hey! still ${pending} to go 💪`
+                      : done > 0 ? 'crushing it today! 🌸' : 'good afternoon~ 🌸'
+  } else if (h >= 17 && h < 21) {
+    msg = pending > 0 ? `almost done! ${pending} left 🌙` : 'great work today! 🌙'
+  } else {
+    msg = 'still up? let\'s get cozy 🌛'
+  }
+
+  speechBubble.textContent = msg
+  speechBubble.classList.add('visible')
+  setTimeout(() => speechBubble.classList.remove('visible'), 4000)
+}
+
 // ── Boot ───────────────────────────────────────────────────────────────────
 ;(async () => {
   data = await ipcRenderer.invoke('load-data')
   renderTasks()
   resetIdle()
   scheduleIdleAnim()
-  // Greet on open
   setTimeout(() => setMood('happy'), 600)
-  setTimeout(() => spawnParticles(4), 800)
+  setTimeout(() => { spawnParticles(4); showGreeting() }, 800)
 })()
