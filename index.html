@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hamster Pet</title>
+  <link rel="stylesheet" href="mocha.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Drag handle -->
+    <div id="drag-bar" title="Drag to move"></div>
+
+    <!-- Close button -->
+    <button id="close-btn" onclick="window.require('electron').remote?.app.quit() || require('electron').ipcRenderer.send('quit')">×</button>
+
+    <!-- Hamster SVG container -->
+    <div id="pet-container">
+      <div id="mood-label"></div>
+      <svg id="mocha" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Ears behind head -->
+        <ellipse id="ear-left"  cx="55"  cy="68" rx="24" ry="22" fill="#9e8e80"/>
+        <ellipse id="ear-right" cx="145" cy="68" rx="24" ry="22" fill="#9e8e80"/>
+        <ellipse cx="55"  cy="69" rx="14" ry="13" fill="#c8a898"/>
+        <ellipse cx="145" cy="69" rx="14" ry="13" fill="#c8a898"/>
+
+        <!-- Body -->
+        <ellipse cx="100" cy="178" rx="46" ry="36" fill="#a89880"/>
+
+        <!-- Head — wide and squat -->
+        <ellipse cx="100" cy="108" rx="76" ry="58" fill="#b8a898"/>
+
+        <!-- Face — lighter soft centre oval -->
+        <ellipse cx="100" cy="114" rx="56" ry="44" fill="#d0bfaf" opacity="0.5"/>
+
+        <!-- Belly lighter patch -->
+        <ellipse cx="100" cy="178" rx="30" ry="22" fill="#d0c0ae" opacity="0.55"/>
+
+        <!-- Big dark glossy eyes -->
+        <circle id="pupil-left"  cx="74"  cy="98" r="21" fill="#0d0808"/>
+        <circle id="pupil-right" cx="126" cy="98" r="21" fill="#0d0808"/>
+        <circle id="gloss-left-1"  cx="82"  cy="88" r="8"   fill="white" opacity="0.92"/>
+        <circle id="gloss-right-1" cx="134" cy="88" r="8"   fill="white" opacity="0.92"/>
+        <circle id="gloss-left-2"  cx="87"  cy="94" r="4"   fill="white" opacity="0.5"/>
+        <circle id="gloss-right-2" cx="139" cy="94" r="4"   fill="white" opacity="0.5"/>
+
+        <!-- Tears — welling up inside eyes, clipped to eye shape -->
+        <g id="tears" opacity="0">
+          <!-- left eye water pool -->
+          <clipPath id="eye-clip-l"><circle cx="74" cy="98" r="21"/></clipPath>
+          <clipPath id="eye-clip-r"><circle cx="126" cy="98" r="21"/></clipPath>
+          <ellipse cx="74"  cy="115" rx="15" ry="7" fill="#dde8ee" opacity="0.55" clip-path="url(#eye-clip-l)"/>
+          <ellipse cx="126" cy="115" rx="15" ry="7" fill="#dde8ee" opacity="0.55" clip-path="url(#eye-clip-r)"/>
+        </g>
+
+        <!-- Eyelids for blink animation -->
+        <ellipse class="eyelid" cx="74"  cy="98" rx="21" ry="21" fill="#b8a898" transform-origin="74 77"/>
+        <ellipse class="eyelid" cx="126" cy="98" rx="21" ry="21" fill="#b8a898" transform-origin="126 77"/>
+
+        <!-- Tiny nose -->
+        <ellipse cx="100" cy="128" rx="4" ry="3" fill="#7a5050"/>
+
+        <!-- Mouth -->
+        <g id="mouth">
+          <path id="mouth-path" d="M 93 136 Q 100 143 107 136" stroke="#7a5050" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- Very soft blush -->
+        <ellipse cx="63"  cy="122" rx="14" ry="8" fill="#c07868" opacity="0.2"/>
+        <ellipse cx="137" cy="122" rx="14" ry="8" fill="#c07868" opacity="0.2"/>
+
+        <!-- Tiny paws -->
+        <ellipse cx="68"  cy="190" rx="18" ry="11" fill="#a89880"/>
+        <ellipse cx="132" cy="190" rx="18" ry="11" fill="#a89880"/>
+        <circle cx="60"  cy="195" r="4" fill="#9a8070"/>
+        <circle cx="68"  cy="197" r="4" fill="#9a8070"/>
+        <circle cx="76"  cy="195" r="4" fill="#9a8070"/>
+        <circle cx="124" cy="195" r="4" fill="#9a8070"/>
+        <circle cx="132" cy="197" r="4" fill="#9a8070"/>
+        <circle cx="140" cy="195" r="4" fill="#9a8070"/>
+
+        <!-- Iced latte — appears when happy -->
+        <g id="latte" opacity="0">
+          <!-- straw -->
+          <rect x="54" y="152" width="3.5" height="34" rx="1.5" fill="#f9a8c0"/>
+          <!-- cup trapezoid -->
+          <path d="M 44 170 L 47 200 L 72 200 L 75 170 Z" fill="white" opacity="0.85" stroke="#d0c0b0" stroke-width="1"/>
+          <!-- latte liquid layer -->
+          <path d="M 44.8 182 L 47 200 L 72 200 L 74.2 182 Z" fill="#c8956a" opacity="0.7"/>
+          <!-- milk layer -->
+          <path d="M 45.4 176 L 44.8 182 L 74.2 182 L 73.6 176 Z" fill="#e8d5b8" opacity="0.8"/>
+          <!-- ice cubes -->
+          <rect x="49" y="183" width="8"  height="8"  rx="1.5" fill="white" opacity="0.6"/>
+          <rect x="60" y="185" width="7"  height="7"  rx="1.5" fill="white" opacity="0.5"/>
+          <rect x="55" y="188" width="6"  height="6"  rx="1.5" fill="white" opacity="0.55"/>
+          <!-- whipped cream on top -->
+          <path d="M 46 172 Q 52 164 59 170 Q 64 163 70 170 Q 74 165 76 170" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>
+          <!-- cup outline over cream -->
+          <path d="M 44 170 L 47 200 L 72 200 L 75 170 Z" fill="none" stroke="#c8b8a8" stroke-width="1"/>
+        </g>
+
+        <!-- Bow 🎀 on right side -->
+        <g id="bow">
+          <path d="M 148 57 C 140 48 128 46 128 54 C 128 62 140 64 148 61 Z" fill="#f9a8c0" stroke="#e07898" stroke-width="0.7"/>
+          <path d="M 148 57 C 156 48 168 46 168 54 C 168 62 156 64 148 61 Z" fill="#f9a8c0" stroke="#e07898" stroke-width="0.7"/>
+          <path d="M 145 61 C 141 67 137 72 134 70" stroke="#e07898" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M 151 61 C 155 67 159 72 162 70" stroke="#e07898" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="148" cy="58" r="5"   fill="#fdd0e0" stroke="#e07898" stroke-width="0.7"/>
+          <circle cx="148" cy="58" r="2.5" fill="#f9a8c0"/>
+        </g>
+
+      </svg>
+
+      <!-- Floating particles (happy state) -->
+      <div id="particles"></div>
+    </div>
+
+    <!-- Task panel (hidden by default) -->
+    <div id="task-panel" class="hidden">
+      <div id="stats-bar">
+        <span id="streak-display">🔥 0 day streak</span>
+        <span id="xp-display">✨ 0 pts</span>
+      </div>
+
+      <div id="task-input-row">
+        <input id="task-input" type="text" placeholder="Add a task..." maxlength="40" />
+        <button id="add-btn">+</button>
+      </div>
+
+      <ul id="task-list"></ul>
+
+      <div id="empty-state">No tasks yet — add one above!</div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

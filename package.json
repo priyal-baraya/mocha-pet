@@ -1,0 +1,12 @@
+{
+  "name": "mocha-pet",
+  "version": "1.0.0",
+  "description": "A Mocha — desktop productivity hamster",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
