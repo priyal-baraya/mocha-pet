@@ -1,12 +1,48 @@
 {
   "name": "mocha-pet",
   "version": "1.0.0",
-  "description": "A Mocha — desktop productivity hamster",
+  "description": "A desktop productivity hamster",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.mocha.pet",
+    "productName": "Mocha",
+    "files": [
+      "index.html",
+      "main.js",
+      "renderer.js",
+      "mocha.css",
+      "assets/**"
+    ],
+    "win": {
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      },
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "Mocha"
+    }
   },
   "devDependencies": {
-    "electron": "^28.0.0"
+    "@resvg/resvg-js": "^2.6.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^26.15.2",
+    "png-to-ico": "^3.0.1"
   }
 }
