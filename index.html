@@ -7,13 +7,10 @@
 </head>
 <body>
   <div id="app">
-    <!-- Drag handle -->
-    <div id="drag-bar" title="Drag to move"></div>
 
 
     <!-- Hamster SVG container -->
     <div id="pet-container">
-      <div id="mood-label"></div>
       <div id="speech-bubble"></div>
       <svg id="mocha" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
 
@@ -98,6 +95,55 @@
           <path d="M 44 170 L 47 200 L 72 200 L 75 170 Z" fill="none" stroke="#c8b8a8" stroke-width="1"/>
         </g>
 
+        <!-- Headphones (music playing) — cups over ears, band over head top -->
+        <g id="headphones" opacity="0">
+          <path d="M 46 76 Q 100 36 154 76" stroke="#8a7070" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="44"  cy="80" rx="14" ry="17" fill="#c0a8a8" stroke="#8a7070" stroke-width="1.5"/>
+          <ellipse cx="44"  cy="80" rx="9"  ry="11" fill="#a08888"/>
+          <ellipse cx="44"  cy="80" rx="4.5" ry="5.5" fill="#7a6060" opacity="0.6"/>
+          <ellipse cx="156" cy="80" rx="14" ry="17" fill="#c0a8a8" stroke="#8a7070" stroke-width="1.5"/>
+          <ellipse cx="156" cy="80" rx="9"  ry="11" fill="#a08888"/>
+          <ellipse cx="156" cy="80" rx="4.5" ry="5.5" fill="#7a6060" opacity="0.6"/>
+        </g>
+
+        <!-- Sunglasses (sunny + hot) — cute pink oval tint -->
+        <g id="sunglasses" opacity="0">
+          <ellipse cx="74"  cy="100" rx="22" ry="16" fill="#e8607a" opacity="0.72"/>
+          <ellipse cx="126" cy="100" rx="22" ry="16" fill="#e8607a" opacity="0.72"/>
+          <path d="M 96 100 Q 100 96 104 100" stroke="#c04060" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <line x1="52"  y1="97" x2="40"  y2="94" stroke="#c04060" stroke-width="2" stroke-linecap="round"/>
+          <line x1="148" y1="97" x2="160" y2="94" stroke="#c04060" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="66"  cy="93" rx="8" ry="5" fill="white" opacity="0.28"/>
+          <ellipse cx="118" cy="93" rx="8" ry="5" fill="white" opacity="0.28"/>
+        </g>
+
+        <!-- Umbrella (rainy / stormy) — held by right paw -->
+        <g id="umbrella" opacity="0">
+          <!-- stick -->
+          <line x1="140" y1="183" x2="150" y2="113" stroke="#c8a898" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- J-handle at bottom -->
+          <path d="M 140 183 Q 140 192 133 192" stroke="#c8a898" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- dome -->
+          <path d="M 124 113 Q 137 78 150 73 Q 163 78 176 113 Z" fill="#f9a8c0" stroke="#e07898" stroke-width="1.2"/>
+          <!-- scalloped bottom edge -->
+          <path d="M 124 113 Q 133 123 141 113 Q 150 123 159 113 Q 168 123 176 113" stroke="#e07898" stroke-width="1.2" fill="#fdd8e8"/>
+          <!-- ribs -->
+          <line x1="150" y1="111" x2="150" y2="75" stroke="#e07898" stroke-width="0.7" opacity="0.4"/>
+          <line x1="137" y1="113" x2="131" y2="84" stroke="#e07898" stroke-width="0.7" opacity="0.4"/>
+          <line x1="163" y1="113" x2="169" y2="84" stroke="#e07898" stroke-width="0.7" opacity="0.4"/>
+          <!-- tip -->
+          <circle cx="150" cy="72" r="2" fill="#e07898"/>
+        </g>
+
+        <!-- Snow hat (snowy) — brim sits on head -->
+        <g id="snow-hat" opacity="0">
+          <path d="M 63 70 Q 68 32 100 26 Q 132 32 137 70" fill="#d4887a" stroke="#b06050" stroke-width="0.8"/>
+          <path d="M 65 57 Q 100 51 135 57" stroke="#f9c0d0" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.65"/>
+          <ellipse cx="100" cy="70" rx="43" ry="9" fill="#c07060" stroke="#a05040" stroke-width="0.8"/>
+          <circle cx="100" cy="26" r="10" fill="#fdd0e0" stroke="#e07898" stroke-width="0.5"/>
+          <circle cx="100" cy="26" r="5.5" fill="#f9b8cc"/>
+        </g>
+
         <!-- Bow 🎀 on right side -->
         <g id="bow">
           <path d="M 148 57 C 140 48 128 46 128 54 C 128 62 140 64 148 61 Z" fill="#f9a8c0" stroke="#e07898" stroke-width="0.7"/>
@@ -117,8 +163,11 @@
     <!-- Task panel (hidden by default) -->
     <div id="task-panel" class="hidden">
       <div id="stats-bar">
-        <span id="streak-display">🔥 0 day streak</span>
-        <span id="xp-display">✨ 0 pts</span>
+        <span id="streak-display">📅 0 day streak</span>
+        <span id="level-display">🌱 Lv.1 Cozy</span>
+      </div>
+      <div id="xp-bar-wrap">
+        <div id="xp-bar"></div>
       </div>
 
       <!-- Pomodoro timer -->

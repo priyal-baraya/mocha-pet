@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
-const fs = require('fs')
+const fs   = require('fs')
+const { exec } = require('child_process')
 
 const DATA_PATH = path.join(app.getPath('userData'), 'mocha-data.json')
 
@@ -17,10 +18,12 @@ function saveData(data) {
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2))
 }
 
+let win = null
+
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
 
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 160,
     height: 180,
     x: width - 180,
@@ -58,6 +61,19 @@ app.on('window-all-closed', () => {
 ipcMain.handle('load-data', () => loadData())
 ipcMain.handle('save-data', (_, data) => { saveData(data); return true })
 ipcMain.on('quit', () => app.quit())
+ipcMain.on('drag-window', (_, x, y) => {
+  win.setPosition(Math.round(x), Math.round(y))
+})
+ipcMain.handle('check-spotify', () => new Promise(resolve => {
+  exec(
+    'powershell -command "Get-Process spotify -ErrorAction SilentlyContinue | Select-Object -ExpandProperty MainWindowTitle"',
+    (err, stdout) => {
+      if (err || !stdout.trim()) return resolve(null)
+      const title = stdout.trim()
+      resolve(title && title !== 'Spotify' ? title : null)
+    }
+  )
+}))
 ipcMain.on('set-on-top', (_, flag) => {
-  BrowserWindow.getAllWindows().forEach(w => w.setAlwaysOnTop(flag))
+  win.setAlwaysOnTop(flag)
 })

@@ -19,13 +19,6 @@ body {
   position: relative;
 }
 
-/* Drag bar */
-#drag-bar {
-  width: 100%;
-  height: 18px;
-  -webkit-app-region: drag;
-  cursor: grab;
-}
 
 
 /* Pet area */
@@ -50,65 +43,58 @@ body {
   display: none;
 }
 
-#mood-label {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255,255,255,0.85);
-  border-radius: 12px;
-  padding: 2px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #b06050;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.4s;
-  pointer-events: none;
-}
-#mood-label.visible { opacity: 1; }
 
-/* Speech bubble */
+/* Speech bubble — cloud style, floats above Mocha */
 #speech-bubble {
   position: absolute;
-  top: -10px;
-  left: 155px;
-  background: rgba(255, 245, 240, 0.97);
-  border: 1px solid #d4a898;
-  border-radius: 12px;
-  padding: 7px 11px;
+  top: 4px;
+  left: 68%;
+  transform: translateX(-40%) scale(0.85) translateY(-4px);
+  max-width: 148px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.4;
+  background: rgba(255, 248, 252, 0.97);
+  border: 1.5px solid #d4a898;
+  border-radius: 40px 35px 38px 36px / 36px 38px 35px 40px;
+  padding: 7px 13px;
   font-size: 11px;
   font-weight: 600;
   color: #7a5050;
-  white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transform: scale(0.85) translateY(4px);
   transition: opacity 0.35s ease, transform 0.35s ease;
   z-index: 10;
-  box-shadow: 0 2px 10px rgba(160, 80, 60, 0.12);
+  box-shadow: 0 2px 10px rgba(160, 80, 60, 0.1);
 }
+/* cloud tail — two dots pointing down toward Mocha */
 #speech-bubble::before {
   content: '';
   position: absolute;
-  left: -7px;
-  top: 12px;
-  border: 7px solid transparent;
-  border-right-color: #d4a898;
-  border-left: 0;
+  bottom: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 11px;
+  height: 11px;
+  background: rgba(255, 248, 252, 0.97);
+  border: 1.5px solid #d4a898;
+  border-radius: 50%;
 }
 #speech-bubble::after {
   content: '';
   position: absolute;
-  left: -5px;
-  top: 13px;
-  border: 6px solid transparent;
-  border-right-color: rgba(255, 245, 240, 0.97);
-  border-left: 0;
+  bottom: -21px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  background: rgba(255, 248, 252, 0.97);
+  border: 1.5px solid #d4a898;
+  border-radius: 50%;
 }
 #speech-bubble.visible {
   opacity: 1;
-  transform: scale(1) translateY(0);
+  transform: translateX(-40%) scale(1) translateY(0);
 }
 
 /* Tear */
@@ -232,6 +218,16 @@ body {
   100%            { transform: scaleY(0); }
 }
 
+/* Music bop — one-shot */
+#mocha.music-bop {
+  animation: music-bop 0.9s ease-in-out 1 !important;
+}
+@keyframes music-bop {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  30%       { transform: translateY(-12px) rotate(2deg); }
+  65%       { transform: translateY(-5px) rotate(-1deg); }
+}
+
 /* Petting */
 #mocha.petting {
   animation: pet-wiggle 1.6s ease-in-out infinite;
@@ -273,6 +269,24 @@ body {
   margin-bottom: 4px;
   letter-spacing: 0.5px;
 }
+
+/* XP bar */
+#xp-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: #f0e0d8;
+  border-radius: 3px;
+  margin: -4px 0 10px;
+  overflow: hidden;
+}
+#xp-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #d4887a, #f0a0c0);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 
 /* Panel footer */
 #panel-footer {

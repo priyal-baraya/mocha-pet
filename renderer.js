@@ -9,7 +9,6 @@ const SAD_MS  = 60 * 60 * 1000  // 1 hour of unfinished tasks
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const mocha      = document.getElementById('mocha')
-const moodLabel  = document.getElementById('mood-label')
 const mouthPath  = document.getElementById('mouth-path')
 const pupilL     = document.getElementById('pupil-left')
 const pupilR     = document.getElementById('pupil-right')
@@ -23,7 +22,6 @@ const taskInput  = document.getElementById('task-input')
 const taskList   = document.getElementById('task-list')
 const emptyState = document.getElementById('empty-state')
 const streakEl   = document.getElementById('streak-display')
-const xpEl       = document.getElementById('xp-display')
 
 // ── Moods ──────────────────────────────────────────────────────────────────
 const MOODS = {
@@ -43,9 +41,9 @@ function setMood(mood) {
   pupilR.setAttribute('cy', String(105 + m.pupils.dy))
   document.getElementById('tears').setAttribute('opacity', mood === 'sad' ? '1' : '0')
   document.getElementById('latte').setAttribute('opacity', mood === 'happy' ? '1' : '0')
-  moodLabel.textContent = m.label
-  moodLabel.classList.add('visible')
-  setTimeout(() => moodLabel.classList.remove('visible'), 2500)
+  speechBubble.textContent = m.label
+  speechBubble.classList.add('visible')
+  setTimeout(() => speechBubble.classList.remove('visible'), 2500)
 }
 
 function recalcMood() {
@@ -77,6 +75,23 @@ function recalcMood() {
   else                   setMood('content')
 }
 
+// ── Levels ─────────────────────────────────────────────────────────────────
+const LEVELS = [
+  { level: 1, min: 0,  name: 'Cozy',    label: '🌱 Lv.1' },
+  { level: 2, min: 5,  name: 'Sprout',  label: '🌸 Lv.2' },
+  { level: 3, min: 15, name: 'Bright',  label: '✨ Lv.3' },
+  { level: 4, min: 30, name: 'Starlet', label: '⭐ Lv.4' },
+  { level: 5, min: 50, name: 'Radiant', label: '👑 Lv.5' },
+]
+
+function getLevel(total) {
+  let lvl = LEVELS[0]
+  for (const l of LEVELS) { if (total >= l.min) lvl = l }
+  return lvl
+}
+
+function applyLevel() {}
+
 // ── Particles ──────────────────────────────────────────────────────────────
 const SPARKS = ['✨', '🌸', '💖', '⭐', '🎉']
 function spawnParticles(count = 5) {
@@ -106,7 +121,15 @@ function updateStreak() {
 function renderStats() {
   const fire = data.streak >= 3 ? '🔥' : '📅'
   streakEl.textContent = `${fire} ${data.streak} day streak`
-  xpEl.textContent = `✨ ${data.totalCompleted} pts`
+
+  const lvl     = getLevel(data.totalCompleted)
+  const nextLvl = LEVELS.find(l => l.min > data.totalCompleted)
+  document.getElementById('level-display').textContent = `${lvl.label} ${lvl.name}`
+
+  const pct = nextLvl
+    ? ((data.totalCompleted - lvl.min) / (nextLvl.min - lvl.min)) * 100
+    : 100
+  document.getElementById('xp-bar').style.width = Math.min(100, pct) + '%'
 }
 
 // ── Tasks ──────────────────────────────────────────────────────────────────
@@ -160,11 +183,24 @@ function toggleTask(id) {
   task.done = !task.done
 
   if (task.done) {
+    const prevLvl = getLevel(data.totalCompleted)
     data.totalCompleted++
     updateStreak()
-    spawnParticles(6)
-    mocha.classList.add('celebrating')
-    setTimeout(() => mocha.classList.remove('celebrating'), 2200)
+    const newLvl = getLevel(data.totalCompleted)
+
+    if (newLvl.level > prevLvl.level) {
+      applyLevel(newLvl)
+      spawnParticles(12)
+      mocha.classList.add('celebrating')
+      setTimeout(() => mocha.classList.remove('celebrating'), 2200)
+      speechBubble.textContent = `levelled up! ${newLvl.label} ${newLvl.name} 🎉`
+      speechBubble.classList.add('visible')
+      setTimeout(() => speechBubble.classList.remove('visible'), 4000)
+    } else {
+      spawnParticles(6)
+      mocha.classList.add('celebrating')
+      setTimeout(() => mocha.classList.remove('celebrating'), 2200)
+    }
   }
 
   save()
@@ -356,25 +392,64 @@ function spawnHearts() {
   }
 }
 
-mocha.addEventListener('mousedown', () => {
-  didPet = false
+let dragging     = false
+let dragOffsetX  = 0
+let dragOffsetY  = 0
+let mouseDownX   = 0
+let mouseDownY   = 0
+const DRAG_THRESHOLD = 6
+
+mocha.addEventListener('mousedown', e => {
+  e.preventDefault()
+  didPet     = false
+  dragging   = false
+  mouseDownX = e.clientX
+  mouseDownY = e.clientY
+  dragOffsetX = e.clientX
+  dragOffsetY = e.clientY
   pressTimer = setTimeout(() => startPetting(), 400)
 })
 
-mocha.addEventListener('mouseup', () => {
-  clearTimeout(pressTimer)
-  if (didPet) {
-    stopPetting()
-  } else {
-    expanded = !expanded
-    taskPanel.classList.toggle('hidden', !expanded)
-    ipcRenderer.send(expanded ? 'expand' : 'collapse')
+document.addEventListener('mousemove', e => {
+  if (!pressTimer && !didPet && !dragging) return
+  const dx = e.clientX - mouseDownX
+  const dy = e.clientY - mouseDownY
+  if (!dragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+    // crossed drag threshold — cancel pet timer, start drag
+    clearTimeout(pressTimer)
+    pressTimer = null
+    dragging = true
+    mocha.style.cursor = 'grabbing'
+  }
+  if (dragging) {
+    ipcRenderer.send('drag-window', e.screenX - dragOffsetX, e.screenY - dragOffsetY)
   }
 })
 
-mocha.addEventListener('mouseleave', () => {
+document.addEventListener('mouseup', e => {
+  if (dragging) {
+    dragging = false
+    mocha.style.cursor = 'pointer'
+    return
+  }
+  clearTimeout(pressTimer)
+  pressTimer = null
+  if (didPet) {
+    stopPetting()
+  } else {
+    // only toggle panel on a clean tap on mocha
+    if (e.target.closest('#mocha')) {
+      expanded = !expanded
+      taskPanel.classList.toggle('hidden', !expanded)
+      ipcRenderer.send(expanded ? 'expand' : 'collapse')
+    }
+  }
+})
+
+document.addEventListener('mouseleave', () => {
   if (didPet) stopPetting()
   clearTimeout(pressTimer)
+  pressTimer = null
 })
 
 // ── Input ──────────────────────────────────────────────────────────────────
@@ -529,6 +604,105 @@ async function save() {
   await ipcRenderer.invoke('save-data', data)
 }
 
+// ── Weather ────────────────────────────────────────────────────────────────
+const sunglasses = document.getElementById('sunglasses')
+const umbrella   = document.getElementById('umbrella')
+const snowHat    = document.getElementById('snow-hat')
+
+function weatherCode(code, temp) {
+  if (code >= 71 && code <= 86)               return 'snowy'
+  if (code >= 95)                             return 'stormy'
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rainy'
+  if (code <= 1 && temp > 22)                 return 'sunny'
+  return 'clear'
+}
+
+async function fetchWeather() {
+  try {
+    const loc = await fetch('https://ipapi.co/json/').then(r => r.json())
+    const w   = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true`
+    ).then(r => r.json())
+    const state = weatherCode(w.current_weather.weathercode, w.current_weather.temperature)
+    applyWeather(state, w.current_weather.temperature)
+  } catch { /* no weather data, stay default */ }
+}
+
+function applyWeather(state, temp) {
+  sunglasses.setAttribute('opacity', state === 'sunny'  ? '1' : '0')
+  umbrella.setAttribute  ('opacity', (state === 'rainy' || state === 'stormy') ? '1' : '0')
+  snowHat.setAttribute   ('opacity', state === 'snowy'  ? '1' : '0')
+
+  const msgs = {
+    sunny:  `${Math.round(temp)}°C and sunny ☀️`,
+    rainy:  'rainy day outside 🌧️',
+    stormy: 'stormy outside ⛈️',
+    snowy:  "it's snowing! ❄️",
+    clear:  `${Math.round(temp)}°C outside 🌤️`,
+  }
+  speechBubble.textContent = msgs[state] || ''
+  if (msgs[state]) {
+    speechBubble.classList.add('visible')
+    setTimeout(() => speechBubble.classList.remove('visible'), 4000)
+  }
+}
+
+// ── Music ──────────────────────────────────────────────────────────────────
+const headphones = document.getElementById('headphones')
+
+let musicBopTimer = null
+
+async function checkMusic() {
+  try {
+    const title = await ipcRenderer.invoke('check-spotify')
+    const playing = !!title
+    headphones.setAttribute('opacity', playing ? '1' : '0')
+
+    if (playing && !musicBopTimer) {
+      scheduleMusicBop()
+    } else if (!playing && musicBopTimer) {
+      clearTimeout(musicBopTimer)
+      musicBopTimer = null
+    }
+  } catch { /* ignore */ }
+}
+
+function scheduleMusicBop() {
+  const delay = 8000 + Math.random() * 10000 // 8–18s
+  musicBopTimer = setTimeout(() => {
+    const busy = mocha.classList.contains('celebrating') || mocha.classList.contains('petting')
+    if (!busy) {
+      mocha.classList.remove('music-bop')
+      void mocha.offsetWidth
+      mocha.classList.add('music-bop')
+      setTimeout(() => mocha.classList.remove('music-bop'), 950)
+    }
+    musicBopTimer = null
+    scheduleMusicBop()
+  }, delay)
+}
+
+// ── DEV TEST — remove when done ────────────────────────────────────────────
+// Weather:  1=sunny  2=rainy  3=snowy  4=stormy  0=clear
+// Music:    H=toggle headphones
+// Levels:   Q=Lv1  W=Lv2  E=Lv3  R=Lv4  T=Lv5
+document.addEventListener('keydown', e => {
+  if (e.key === '1') applyWeather('sunny',  28)
+  if (e.key === '2') applyWeather('rainy',  15)
+  if (e.key === '3') applyWeather('snowy',  -2)
+  if (e.key === '4') applyWeather('stormy', 10)
+  if (e.key === '0') {
+    applyWeather('clear', 18)
+    headphones.setAttribute('opacity', '0')
+    document.body.classList.remove('music-playing')
+  }
+  if (e.key.toLowerCase() === 'h') {
+    const on = headphones.getAttribute('opacity') === '1'
+    headphones.setAttribute('opacity', on ? '0' : '1')
+    document.body.classList.toggle('music-playing', !on)
+  }
+})
+
 // ── Startup greeting ───────────────────────────────────────────────────────
 const speechBubble = document.getElementById('speech-bubble')
 
@@ -559,8 +733,13 @@ function showGreeting() {
 ;(async () => {
   data = await ipcRenderer.invoke('load-data')
   renderTasks()
+  applyLevel(getLevel(data.totalCompleted))
   resetIdle()
   scheduleIdleAnim()
   setTimeout(() => setMood('happy'), 600)
   setTimeout(() => { spawnParticles(4); showGreeting() }, 800)
+  fetchWeather()
+  checkMusic()
+  setInterval(checkMusic, 15000)
+  setInterval(fetchWeather, 30 * 60 * 1000)
 })()
