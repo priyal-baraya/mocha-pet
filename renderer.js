@@ -682,26 +682,6 @@ function scheduleMusicBop() {
   }, delay)
 }
 
-// ── DEV TEST — remove when done ────────────────────────────────────────────
-// Weather:  1=sunny  2=rainy  3=snowy  4=stormy  0=clear
-// Music:    H=toggle headphones
-// Levels:   Q=Lv1  W=Lv2  E=Lv3  R=Lv4  T=Lv5
-document.addEventListener('keydown', e => {
-  if (e.key === '1') applyWeather('sunny',  28)
-  if (e.key === '2') applyWeather('rainy',  15)
-  if (e.key === '3') applyWeather('snowy',  -2)
-  if (e.key === '4') applyWeather('stormy', 10)
-  if (e.key === '0') {
-    applyWeather('clear', 18)
-    headphones.setAttribute('opacity', '0')
-    document.body.classList.remove('music-playing')
-  }
-  if (e.key.toLowerCase() === 'h') {
-    const on = headphones.getAttribute('opacity') === '1'
-    headphones.setAttribute('opacity', on ? '0' : '1')
-    document.body.classList.toggle('music-playing', !on)
-  }
-})
 
 // ── Startup greeting ───────────────────────────────────────────────────────
 const speechBubble = document.getElementById('speech-bubble')
